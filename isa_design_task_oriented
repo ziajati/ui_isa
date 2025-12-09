@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISA Design A - Task-Oriented Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --airbus-blue: #00205B;
+            --airbus-light: #0066B3;
+            --airbus-cyan: #00A3E0;
+            --success: #00875A;
+            --warning: #FF8B00;
+            --surface: #F8FAFC;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+        }
+        
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--surface);
+            min-height: 100vh;
+            color: var(--text);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--airbus-blue) 0%, #003380 100%);
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,32,91,0.15);
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+            letter-spacing: 2px;
+        }
+        
+        .app-title {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            padding-left: 16px;
+            border-left: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* Main Layout */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        /* Welcome Section */
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--airbus-blue);
+            margin-bottom: 8px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 16px;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .source-badges {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .source-badge {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .source-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        /* Task Cards - THE KEY HCI IMPROVEMENT */
+        .task-section {
+            margin-bottom: 32px;
+        }
+        
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+        
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .task-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .task-card:hover {
+            border-color: var(--airbus-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,163,224,0.15);
+        }
+        
+        .task-card.active {
+            border-color: var(--airbus-cyan);
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+        }
+        
+        .task-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .task-card:nth-child(1) .task-icon { background: #DBEAFE; }
+        .task-card:nth-child(2) .task-icon { background: #D1FAE5; }
+        .task-card:nth-child(3) .task-icon { background: #FEF3C7; }
+        
+        .task-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        
+        .task-description {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .task-examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .example-chip {
+            background: var(--surface);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .task-stat {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 11px;
+            color: var(--text-light);
+        }
+        
+        /* Search Section */
+        .search-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            margin-bottom: 32px;
+        }
+        
+        .search-context {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .context-label {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        .context-value {
+            background: var(--airbus-cyan);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .search-input-wrapper {
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 120px 16px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--airbus-cyan);
+            box-shadow: 0 0 0 4px rgba(0,163,224,0.1);
+        }
+        
+        .search-input::placeholder {
+            color: #94A3B8;
+        }
+        
+        .search-actions {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .search-btn {
+            background: var(--airbus-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .search-btn:hover {
+            background: #003380;
+        }
+        
+        .filter-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+        
+        /* Smart Suggestions */
+        .suggestions-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .suggestions-label {
+            font-size: 12px;
+            color: var(--text-light);
+            white-space: nowrap;
+        }
+        
+        .suggestion-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .suggestion-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .suggestion-chip:hover {
+            background: #E0F2FE;
+            border-color: var(--airbus-cyan);
+            color: var(--airbus-light);
+        }
+        
+        .suggestion-chip.code {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: #FEF3C7;
+            border-color: #FCD34D;
+        }
+        
+        /* Recent Activity */
+        .activity-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        .recent-searches {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .section-link {
+            font-size: 12px;
+            color: var(--airbus-light);
+            text-decoration: none;
+        }
+        
+        .search-history-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-history-item:hover {
+            background: var(--surface);
+        }
+        
+        .history-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+        
+        .history-text {
+            flex: 1;
+        }
+        
+        .history-query {
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+        
+        .history-meta {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+        
+        .history-result {
+            font-size: 12px;
+            color: var(--success);
+        }
+        
+        /* Quick Stats */
+        .quick-stats {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--airbus-blue);
+        }
+        
+        /* HCI Principles Badge */
+        .hci-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--airbus-blue);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 300px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .hci-badge strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        @media (max-width: 900px) {
+            .task-grid {
+                grid-template-columns: 1fr;
+            }
+            .activity-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo-section">
+            <span class="logo">AIRBUS</span>
+            <span class="app-title">Document Search</span>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn">🔔 2</button>
+            <button class="header-btn">Help</button>
+            <button class="header-btn">Settings</button>
+        </div>
+    </header>
+    
+    <main class="main-container">
+        <section class="welcome-section">
+            <h1 class="welcome-title">Find documents across all Airbus repositories</h1>
+            <p class="welcome-subtitle">Search 200k+ documents from ECM, Google Drive, and ServiceNow in one place</p>
+            <div class="source-badges">
+                <span class="source-badge"><span class="dot"></span> ECM Connected</span>
+                <span class="source-badge"><span class="dot"></span> Google Drive</span>
+                <span class="source-badge"><span class="dot"></span> ServiceNow</span>
+            </div>
+        </section>
+        
+        <section class="task-section">
+            <div class="section-label">What would you like to do?</div>
+            <div class="task-grid">
+                <div class="task-card active" onclick="selectTask(this, 'question')">
+                    <div class="task-icon">❓</div>
+                    <div class="task-stat">23% of searches</div>
+                    <h3 class="task-title">Ask a Question</h3>
+                    <p class="task-description">Get answers about processes, procedures, or technical concepts</p>
+                    <div class="task-examples">
+                        <span class="example-chip">What is HUDC?</span>
+                        <span class="example-chip">How to fill SDR?</span>
+                    </div>
+                </div>
+                
+                <div class="task-card" onclick="selectTask(this, 'document')">
+                    <div class="task-icon">📄</div>
+                    <div class="task-stat">42% of searches</div>
+                    <h3 class="task-title">Find a Document</h3>
+                    <p class="task-description">Search by keywords, topics, or browse by category</p>
+                    <div class="task-examples">
+                        <span class="example-chip">A350 RSDP</span>
+                        <span class="example-chip">edge distance</span>
+                    </div>
+                </div>
+                
+                <div class="task-card" onclick="selectTask(this, 'lookup')">
+                    <div class="task-icon">🔢</div>
+                    <div class="task-stat">11% of searches</div>
+                    <h3 class="task-title">Look Up by ID</h3>
+                    <p class="task-description">Find specific documents using reference codes or IDs</p>
+                    <div class="task-examples">
+                        <span class="example-chip code">UG2300123</span>
+                        <span class="example-chip code">ATA 2372</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="search-section">
+            <div class="search-context">
+                <span class="context-label">Searching for:</span>
+                <span class="context-value" id="search-mode">Questions</span>
+                <span class="context-label" style="margin-left: auto;">Tip: Include aircraft type (A350, A320) for better results</span>
+            </div>
+            <div class="search-input-wrapper">
+                <input type="text" class="search-input" id="search-input" placeholder="What would you like to know?">
+                <div class="search-actions">
+                    <button class="filter-btn">⚙️</button>
+                    <button class="search-btn">Search →</button>
+                </div>
+            </div>
+            <div class="suggestions-row">
+                <span class="suggestions-label">Try:</span>
+                <div class="suggestion-chips" id="suggestions">
+                    <span class="suggestion-chip">What is the FIN of HUDC on single aisle?</span>
+                    <span class="suggestion-chip">How to justify a load increase?</span>
+                    <span class="suggestion-chip">Where is the ps3 template?</span>
+                </div>
+            </div>
+        </section>
+        
+        <section class="activity-section">
+            <div class="recent-searches">
+                <div class="section-header">
+                    <h3 class="section-title">Your Recent Searches</h3>
+                    <a href="#" class="section-link">View all →</a>
+                </div>
+                <div class="search-history-item">
+                    <div class="history-icon">📄</div>
+                    <div class="history-text">
+                        <div class="history-query">A350 RSDP design principles</div>
+                        <div class="history-meta">2 hours ago • 3 results found</div>
+                    </div>
+                    <span class="history-result">✓ Found</span>
+                </div>
+                <div class="search-history-item">
+                    <div class="history-icon">❓</div>
+                    <div class="history-text">
+                        <div class="history-query">What is edge distance value in A350?</div>
+                        <div class="history-meta">Yesterday • 5 results found</div>
+                    </div>
+                    <span class="history-result">✓ Found</span>
+                </div>
+                <div class="search-history-item">
+                    <div class="history-icon">🔢</div>
+                    <div class="history-text">
+                        <div class="history-query">UG2300123</div>
+                        <div class="history-meta">2 days ago • 1 result found</div>
+                    </div>
+                    <span class="history-result">✓ Found</span>
+                </div>
+            </div>
+            
+            <div class="quick-stats">
+                <div class="section-header">
+                    <h3 class="section-title">Your Activity</h3>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Searches this week</span>
+                    <span class="stat-value">12</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Documents opened</span>
+                    <span class="stat-value">8</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Time saved (est.)</span>
+                    <span class="stat-value">45 min</span>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <div class="hci-badge">
+        <strong>Design A: Task-Oriented Interface</strong>
+        <br><br>
+        <strong>HCI Principles Applied:</strong><br>
+        • <em>Recognition over Recall</em> (Nielsen, 1994) - Task cards let users select intent<br>
+        • <em>Visibility of System Status</em> (Nielsen, 1994) - Source badges show connections<br>
+        • <em>Reduce Memory Load</em> (Shneiderman, 2016) - Examples provided<br><br>
+        <strong>Data Justification:</strong> 53% of queries are ≤2 words; users don't know what to type
+    </div>
+    
+    <!-- 
+    ACADEMIC REFERENCES FOR THIS DESIGN:
+    
+    1. Nielsen, J. (1994). Enhancing the explanatory power of usability heuristics. 
+       Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '94), 152-158.
+       DOI: https://doi.org/10.1145/191666.191729
+       
+    2. Nielsen, J., & Molich, R. (1990). Heuristic evaluation of user interfaces. 
+       Proceedings of CHI '90, 249-256.
+       
+    3. Shneiderman, B., Plaisant, C., Cohen, M., Jacobs, S., Elmqvist, N., & Diakopoulos, N. (2016). 
+       Designing the User Interface: Strategies for Effective Human-Computer Interaction (6th Edition). 
+       Pearson. http://www.cs.umd.edu/hcil/DTUI6
+       
+    4. Norman, D. A. (2013). The Design of Everyday Things (Revised Edition). Basic Books.
+    
+    DESIGN JUSTIFICATION:
+    - Task cards implement "Recognition over Recall" (Nielsen's Heuristic #6)
+    - Three task types derived from query pattern analysis: 42% keyword, 23% question, 11% code lookup
+    - Source badges implement "Visibility of System Status" (Nielsen's Heuristic #1)
+    - Example queries reduce cognitive load (Shneiderman's Golden Rule #8)
+    -->
+    
+    <script>
+        function selectTask(element, type) {
+            document.querySelectorAll('.task-card').forEach(card => card.classList.remove('active'));
+            element.classList.add('active');
+            
+            const searchInput = document.getElementById('search-input');
+            const searchMode = document.getElementById('search-mode');
+            const suggestions = document.getElementById('suggestions');
+            
+            if (type === 'question') {
+                searchMode.textContent = 'Questions';
+                searchInput.placeholder = 'What would you like to know?';
+                suggestions.innerHTML = `
+                    <span class="suggestion-chip">What is the FIN of HUDC on single aisle?</span>
+                    <span class="suggestion-chip">How to justify a load increase?</span>
+                    <span class="suggestion-chip">Where is the ps3 template?</span>
+                `;
+            } else if (type === 'document') {
+                searchMode.textContent = 'Documents';
+                searchInput.placeholder = 'Enter keywords or topic...';
+                suggestions.innerHTML = `
+                    <span class="suggestion-chip">A350 RSDP design principles</span>
+                    <span class="suggestion-chip">edge distance requirements</span>
+                    <span class="suggestion-chip">spigot loads A320</span>
+                `;
+            } else if (type === 'lookup') {
+                searchMode.textContent = 'ID Lookup';
+                searchInput.placeholder = 'Enter document ID (e.g., UG2300123, ATA 2372)';
+                suggestions.innerHTML = `
+                    <span class="suggestion-chip code">UG2300123</span>
+                    <span class="suggestion-chip code">ATA 2372</span>
+                    <span class="suggestion-chip code">M2943</span>
+                `;
+            }
+        }
+        
+        // Make suggestion chips clickable
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('suggestion-chip')) {
+                document.getElementById('search-input').value = e.target.textContent;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISA Design B - Conversational Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --airbus-blue: #00205B;
+            --airbus-light: #0066B3;
+            --airbus-cyan: #00A3E0;
+            --chat-bg: #F1F5F9;
+            --user-bubble: #00205B;
+            --system-bubble: #FFFFFF;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--airbus-blue);
+            padding: 0 20px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo {
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+            letter-spacing: 1.5px;
+        }
+        
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .app-name {
+            color: rgba(255,255,255,0.9);
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .status-pill {
+            background: rgba(16,185,129,0.2);
+            color: #10B981;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-pill::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #10B981;
+            border-radius: 50%;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.8);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        /* Main Chat Area */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            flex-direction: column;
+        }
+        
+        .chat-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        
+        /* Welcome State */
+        .welcome-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--airbus-cyan) 0%, var(--airbus-light) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 32px rgba(0,163,224,0.3);
+        }
+        
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 15px;
+            color: var(--text-light);
+            max-width: 400px;
+            margin: 0 auto 32px;
+            line-height: 1.6;
+        }
+        
+        /* Starter Prompts Grid */
+        .starter-section {
+            margin-top: 20px;
+        }
+        
+        .starter-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+        
+        .starter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .starter-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .starter-card:hover {
+            border-color: var(--airbus-cyan);
+            box-shadow: 0 4px 12px rgba(0,163,224,0.15);
+            transform: translateY(-1px);
+        }
+        
+        .starter-icon {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .starter-text {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.4;
+        }
+        
+        .starter-hint {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+        
+        /* Chat Messages */
+        .message {
+            display: flex;
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message-bubble {
+            max-width: 75%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .message.user .message-bubble {
+            background: var(--user-bubble);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.system .message-bubble {
+            background: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.system .message-bubble.thinking {
+            background: #FEF3C7;
+            border-color: #FCD34D;
+        }
+        
+        /* Result Cards in Chat */
+        .result-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        .result-card {
+            background: var(--chat-bg);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .result-card:hover {
+            background: #E2E8F0;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+        
+        .result-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--airbus-light);
+        }
+        
+        .result-source {
+            font-size: 10px;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            color: var(--text-light);
+        }
+        
+        .result-snippet {
+            font-size: 12px;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+        
+        .result-match {
+            background: #FEF3C7;
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+        
+        /* Clarification Chips */
+        .clarification {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .clarification-label {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        
+        .clarification-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .clarification-chip {
+            background: var(--chat-bg);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clarification-chip:hover {
+            background: var(--airbus-cyan);
+            border-color: var(--airbus-cyan);
+            color: white;
+        }
+        
+        /* Input Area */
+        .input-area {
+            padding: 16px 24px 24px;
+            background: white;
+            border-top: 1px solid var(--border);
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            resize: none;
+            font-family: inherit;
+            line-height: 1.4;
+            min-height: 48px;
+            max-height: 120px;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--airbus-cyan);
+        }
+        
+        .chat-input::placeholder {
+            color: #94A3B8;
+        }
+        
+        .input-hint {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            font-size: 10px;
+            color: var(--text-light);
+        }
+        
+        .send-btn {
+            background: var(--airbus-blue);
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        
+        .send-btn:hover {
+            background: #003380;
+        }
+        
+        .send-btn:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+        }
+        
+        /* Quick Actions Bar */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .quick-action {
+            background: var(--chat-bg);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        
+        .quick-action:hover {
+            background: #E2E8F0;
+            color: var(--text);
+        }
+        
+        /* Feedback Bar */
+        .feedback-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 11px;
+            color: var(--text-light);
+        }
+        
+        .feedback-btn {
+            background: none;
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        
+        .feedback-btn:hover {
+            background: var(--chat-bg);
+        }
+        
+        .feedback-btn.positive:hover {
+            background: #D1FAE5;
+            border-color: #10B981;
+        }
+        
+        .feedback-btn.negative:hover {
+            background: #FEE2E2;
+            border-color: #EF4444;
+        }
+        
+        /* HCI Badge */
+        .hci-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--airbus-blue);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 320px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            line-height: 1.5;
+        }
+        
+        .hci-badge strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        /* Hidden states for demo */
+        .hidden {
+            display: none !important;
+        }
+        
+        @media (max-width: 600px) {
+            .starter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo-area">
+            <span class="logo">AIRBUS</span>
+            <span class="divider"></span>
+            <span class="app-name">Document Search</span>
+        </div>
+        <div class="header-right">
+            <span class="status-pill">3 sources connected</span>
+            <button class="icon-btn">⚙️</button>
+            <button class="icon-btn">❓</button>
+        </div>
+    </header>
+    
+    <div class="chat-container">
+        <div class="chat-area" id="chat-area">
+            <!-- Welcome State -->
+            <div class="welcome-state" id="welcome-state">
+                <div class="welcome-icon">🔍</div>
+                <h1 class="welcome-title">How can I help you today?</h1>
+                <p class="welcome-subtitle">I can search across ECM, Google Drive, and ServiceNow to find documents, answer questions, or look up specific references.</p>
+                
+                <div class="starter-section">
+                    <div class="starter-label">Try one of these</div>
+                    <div class="starter-grid">
+                        <div class="starter-card" onclick="submitQuery('What is HUDC on single aisle?')">
+                            <div class="starter-icon">❓</div>
+                            <div class="starter-text">What is HUDC on single aisle?</div>
+                            <div class="starter-hint">Ask about concepts or definitions</div>
+                        </div>
+                        <div class="starter-card" onclick="submitQuery('Find A350 RSDP design principles')">
+                            <div class="starter-icon">📄</div>
+                            <div class="starter-text">Find A350 RSDP design principles</div>
+                            <div class="starter-hint">Search for documents by topic</div>
+                        </div>
+                        <div class="starter-card" onclick="submitQuery('Look up UG2300123')">
+                            <div class="starter-icon">🔢</div>
+                            <div class="starter-text">Look up UG2300123</div>
+                            <div class="starter-hint">Find by document ID or code</div>
+                        </div>
+                        <div class="starter-card" onclick="submitQuery('How to fill SDR request in Tech Request Tool?')">
+                            <div class="starter-icon">📋</div>
+                            <div class="starter-text">How to fill SDR request?</div>
+                            <div class="starter-hint">Get step-by-step guidance</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Messages (hidden initially) -->
+            <div id="messages-container" class="hidden">
+                <!-- Messages will be inserted here -->
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <div class="quick-actions" id="quick-actions">
+                <span class="quick-action" onclick="submitQuery('What is')">❓ Ask</span>
+                <span class="quick-action" onclick="submitQuery('Find documents about')">📄 Find</span>
+                <span class="quick-action" onclick="submitQuery('Look up')">🔢 Lookup</span>
+                <span class="quick-action" onclick="submitQuery('How to')">📋 How-to</span>
+            </div>
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea class="chat-input" id="chat-input" placeholder="Ask a question or describe what you're looking for..." rows="1" onkeydown="handleKeydown(event)"></textarea>
+                    <span class="input-hint">Press Enter to send</span>
+                </div>
+                <button class="send-btn" id="send-btn" onclick="sendMessage()">→</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="hci-badge">
+        <strong>Design B: Conversational Interface</strong>
+        <br><br>
+        <strong>HCI Principles Applied:</strong><br>
+        • <em>Progressive Disclosure</em> (Nielsen, 2006) - Information revealed in stages<br>
+        • <em>Mental Model Match</em> (Norman, 2013) - Chat pattern familiar from ChatGPT<br>
+        • <em>Error Recovery</em> (Nielsen, 1994) - Clarification chips for ambiguous queries<br><br>
+        <strong>Data Justification:</strong> 58% negative feedback; users need guided reformulation
+    </div>
+    
+    <!--
+    ACADEMIC REFERENCES FOR THIS DESIGN:
+    
+    1. Nielsen, J. (2006). Progressive Disclosure. Nielsen Norman Group.
+       https://www.nngroup.com/articles/progressive-disclosure/
+       
+    2. Carroll, J. M., & Rosson, M. B. (1984). Usability specifications as a tool in iterative development.
+       In Hartson, H. R. (Ed.), Advances in Human-Computer Interaction, Vol. 1, 1-28.
+       
+    3. Norman, D. A. (2013). The Design of Everyday Things (Revised Edition). Basic Books.
+       - Mental models, affordances, signifiers
+       
+    4. Norman, D. A. (1999). Affordance, Conventions, and Design. Interactions, 6(3), 38-43.
+    
+    5. Radlinski, F., & Craswell, N. (2017). A Theoretical Framework for Conversational Search.
+       Proceedings of CHIIR '17, 117-126.
+       
+    6. Clark, L., et al. (2019). What Makes a Good Conversation? 
+       Proceedings of CHI '19. ACM.
+       
+    DESIGN JUSTIFICATION:
+    - Progressive disclosure: 4 levels from prompts → results → clarification → documents
+    - Chat bubbles match mental model from consumer AI (Norman's signifiers)
+    - Clarification chips implement error recovery for 58% negative feedback rate
+    - Starter prompts address 44% bounce rate (blank page anxiety)
+    -->
+    
+    <script>
+        let messageCount = 0;
+        
+        function submitQuery(text) {
+            document.getElementById('chat-input').value = text;
+            sendMessage();
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            // Hide welcome, show messages
+            document.getElementById('welcome-state').classList.add('hidden');
+            document.getElementById('messages-container').classList.remove('hidden');
+            
+            // Add user message
+            addMessage(text, 'user');
+            input.value = '';
+            
+            // Simulate system response after delay
+            setTimeout(() => {
+                if (text.toLowerCase().includes('hudc')) {
+                    addSystemResponse('hudc');
+                } else if (text.toLowerCase().includes('ug2300123') || text.toLowerCase().includes('look up')) {
+                    addSystemResponse('lookup');
+                } else {
+                    addSystemResponse('general');
+                }
+            }, 800);
+        }
+        
+        function addMessage(text, type) {
+            const container = document.getElementById('messages-container');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.innerHTML = `<div class="message-bubble">${text}</div>`;
+            container.appendChild(message);
+            scrollToBottom();
+        }
+        
+        function addSystemResponse(type) {
+            const container = document.getElementById('messages-container');
+            let html = '';
+            
+            if (type === 'hudc') {
+                html = `
+                    <div class="message system">
+                        <div class="message-bubble">
+                            <strong>HUDC</strong> stands for <strong>Head-Up Display Computer</strong>. It's part of the avionics system that processes and displays flight information on the HUD.
+                            
+                            <div class="result-cards">
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <span class="result-title">System Design Document - SA HUD</span>
+                                        <span class="result-source">ECM</span>
+                                    </div>
+                                    <div class="result-snippet">Section 4.2 describes the <span class="result-match">HUDC</span> architecture for Single Aisle aircraft including FIN assignments...</div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <span class="result-title">HUDC FIN Assignment Table</span>
+                                        <span class="result-source">Google Drive</span>
+                                    </div>
+                                    <div class="result-snippet">Complete <span class="result-match">FIN</span> reference table for A320/A321 <span class="result-match">HUDC</span> configurations...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="clarification">
+                                <div class="clarification-label">Need more specific info?</div>
+                                <div class="clarification-chips">
+                                    <span class="clarification-chip" onclick="submitQuery('What is the FIN of HUDC on A320?')">HUDC FIN on A320</span>
+                                    <span class="clarification-chip" onclick="submitQuery('HUDC installation procedure')">Installation procedure</span>
+                                    <span class="clarification-chip" onclick="submitQuery('HUDC troubleshooting')">Troubleshooting</span>
+                                </div>
+                            </div>
+                            
+                            <div class="feedback-bar">
+                                Was this helpful?
+                                <button class="feedback-btn positive">👍 Yes</button>
+                                <button class="feedback-btn negative">👎 No</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'lookup') {
+                html = `
+                    <div class="message system">
+                        <div class="message-bubble">
+                            Found <strong>1 exact match</strong> for that document ID:
+                            
+                            <div class="result-cards">
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <span class="result-title">UG2300123 - ISA User Manual v2.0</span>
+                                        <span class="result-source">ECM</span>
+                                    </div>
+                                    <div class="result-snippet">User Manual for Intelligent Search Agent (ISA). Issue 2.0, 9 pages. Describes usage, filtering, and search syntax.</div>
+                                </div>
+                            </div>
+                            
+                            <div class="feedback-bar">
+                                <a href="#" style="color: #0066B3; text-decoration: none;">📥 Open document</a>
+                                <span style="margin-left: auto;">Was this the right document?</span>
+                                <button class="feedback-btn positive">👍 Yes</button>
+                                <button class="feedback-btn negative">👎 No</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="message system">
+                        <div class="message-bubble">
+                            I found <strong>5 relevant documents</strong> across ECM and Google Drive:
+                            
+                            <div class="result-cards">
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <span class="result-title">A350 RSDP - Reference Stress Data Package</span>
+                                        <span class="result-source">ECM</span>
+                                    </div>
+                                    <div class="result-snippet">Design principles and stress reference data for A350 structural components...</div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <span class="result-title">Edge Distance Requirements - A350</span>
+                                        <span class="result-source">ECM</span>
+                                    </div>
+                                    <div class="result-snippet">Minimum edge distance specifications for fastener placement on A350...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="clarification">
+                                <div class="clarification-label">Narrow your search:</div>
+                                <div class="clarification-chips">
+                                    <span class="clarification-chip" onclick="submitQuery('A350 RSDP Section 3')">Section 3 only</span>
+                                    <span class="clarification-chip" onclick="submitQuery('A350 RSDP fuselage')">Fuselage</span>
+                                    <span class="clarification-chip" onclick="submitQuery('A350 RSDP wing')">Wing</span>
+                                </div>
+                            </div>
+                            
+                            <div class="feedback-bar">
+                                Was this helpful?
+                                <button class="feedback-btn positive">👍 Yes</button>
+                                <button class="feedback-btn negative">👎 No</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            const chatArea = document.getElementById('chat-area');
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        
+        function handleKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // Auto-resize textarea
+        document.getElementById('chat-input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    </script>
+</body>
+</html>
